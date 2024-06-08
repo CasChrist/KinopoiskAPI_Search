@@ -1,9 +1,13 @@
+import requests
+
 from telegram import Update
 from telegram.ext import CallbackContext
-import requests
+from telegram.constants import ChatAction
+
 from bot_token import TOKEN, KINOPOISK_TOKEN
 
-async def search_by_name(update: Update, context: CallbackContext) -> dict:
+async def search_by_name(update: Update, context: CallbackContext):
+  await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
   movie_name = ' '.join(context.args)
   if not movie_name:
     await update.message.reply_text("Пожалуйста, введите название фильма после команды /movie")
@@ -63,48 +67,48 @@ async def search_by_name(update: Update, context: CallbackContext) -> dict:
       pull_data['poster'] = data['docs'][movie]['poster']['url']
       pull_data['ID'] = str(data['docs'][movie]['id'])
   
-      message = pull_data['Название'].upper() + '\n'
+      message = '*' + pull_data['Название'].upper() + '*\n'
       if pull_data['Тип'] == 'movie':
         message += f'[Посмотреть на Кинопоиске](https://www.kinopoisk.ru/film/{pull_data['ID']}/)\n'
       else:
         message += f'[Посмотреть на Кинопоиске](https://www.kinopoisk.ru/series/{pull_data['ID']}/)\n'
-      message += 'ID: ' + pull_data['ID'] + '\n\n'
+      message += 'ID: `' + pull_data['ID'] + '`\n\n'
 
       for key, value in pull_data.items():
         if key == 'Рейтинг':
-          message += key + ' Кинопоиск: ' + pull_data[key]['Кинопоиск'] + '\n' + key + ' IMDb: ' + pull_data[key]['IMDb'] + '\n'
+          message += '*' + key + ' Кинопоиск:* ' + pull_data[key]['Кинопоиск'] + '\n*' + key + ' IMDb:* ' + pull_data[key]['IMDb'] + '\n'
         elif key == 'Страна' or key == 'Жанр':
-          message += key + ': '
+          message += '*' + key + ':* '
           items = ""
           for item in value:
             items += item + ', '
           items = items[:-2]
           message += items + '\n'
         elif key == 'Тип':
-          message += key + ': '
+          message += '*' + key + ':* '
           if value == 'movie':
             message += 'Фильм\n'
           else:
             message += 'Сериал\n'
         elif key == 'Годы выпуска':
-          message += key + ': '
+          message += '*' + key + ':* '
           if value[0] == value[1]:
             message += value[0] + '\n'
           else:
             message += value[0] + '–' + value[1] + '\n'
         elif key == 'Время':
           if int(value) > 59:
-            message += key + ': ' + value + ' мин. / 0'
+            message += '*' + key + ':* ' + value + ' мин. / 0'
             time = (int(value) // 60, int(value) % 60)
-            message += str(time[0]) + ':' + str(time[1]) + '\n'
+            message += str(time[0]) + ':' + str(time[1]) + '\n\n'
           elif int(value) == 0:
             continue
           else:
-            message += key + ': ' + value + 'мин. / ' + '00:' + value + '\n\n'
+            message += '*' + key + ':* ' + value + 'мин. / ' + '00:' + value + '\n\n'
         elif any([key == 'Название', key == 'poster', key == 'ID']):
           continue
         else:
-          message += key + ': ' + value + '\n'
+          message += '*' + key + ':* ' + value + '\n'
 
     if pull_data['poster'] is None:
       await update.message.reply_text(
