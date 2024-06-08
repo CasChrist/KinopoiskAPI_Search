@@ -6,7 +6,7 @@ import api_requests
 # Define start command handler
 async def start(update: Update, context: CallbackContext) -> int:
     await update.message.reply_text(
-        "Привет! Я — бот, предоставляющий информацию о фильмах. Я беру данные с API Кинопоиска. Вот список того, что я могу делать:\n\n/movie <\"Название фильма\"> — выдам краткую информацию обо всех фильмах с таким названием (не более 10-ти)\n")
+        "Привет! Я — бот, предоставляющий информацию о фильмах. Я беру данные с API Кинопоиска. Вот список того, что я могу делать:\n\n/movie <Название фильма> — выдам краткую информацию о фильме с таким названием\n")
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
