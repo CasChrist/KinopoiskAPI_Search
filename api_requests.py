@@ -7,6 +7,7 @@ from telegram.constants import ChatAction
 from bot_token import TOKEN, KINOPOISK_TOKEN
 
 async def search_by_name(update: Update, context: CallbackContext):
+  await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
   movie_name = ' '.join(context.args)
   if not movie_name:
     await update.message.reply_text("Пожалуйста, введите название фильма после команды /movie")
