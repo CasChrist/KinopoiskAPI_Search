@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.constants import ChatAction
 
-from bot_token import TOKEN, KINOPOISK_TOKEN
+from bot_token import KINOPOISK_TOKEN
 
 async def search_by_name(update: Update, context: CallbackContext):
   await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
