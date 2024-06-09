@@ -9,7 +9,7 @@ async def search_afisha(update: Update, context: CallbackContext):
 
   date = context.args
   # URL веб-страницы с афишей кино
-  url = f'https://afisha.yandex.ru/kemerovo/cinema?date={date}&period=1'
+  url = f'https://afisha.yandex.ru/kemerovo/cinema?date={date[0]}&period=1'
 
   # Получение содержимого веб-страницы
   response = requests.get(url)
@@ -24,8 +24,9 @@ async def search_afisha(update: Update, context: CallbackContext):
   movies_dict = dict()
   for movie in movies:
     movie_title = movie.find('h2').get_text()
-    movie_link = movie.find('a')
-    movies_dict[movie_title] = "https://afisha.yandex.ru" + movie_link['href']
+    movie_link = movie.find('a')['href']
+    index = movie_link[17:movie_link.index('?source')]
+    movies_dict[movie_title] = index
   
   keyboard = []
   for movie, link in movies_dict.items():
@@ -40,6 +41,6 @@ async def search_afisha(update: Update, context: CallbackContext):
     message += str(period) + movie + '\n'
     period += 1
 
-  update.message.reply_text(text=message, reply_markup=markup)
+  await update.message.reply_text(text=message, reply_markup=markup)
 
     
