@@ -38,7 +38,7 @@ async def search_afisha(update: Update, context: CallbackContext):
 
   period = 1
   for movie in movies_dict.keys():
-    message += str(period) + movie + '\n'
+    message += str(period) + '. ' + movie + '\n'
     period += 1
 
   await update.message.reply_text(text=message, reply_markup=markup)
