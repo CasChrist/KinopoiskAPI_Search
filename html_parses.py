@@ -1,6 +1,9 @@
 import requests
 
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import (
+  Update, InlineKeyboardMarkup, InlineKeyboardButton,
+  ReplyKeyboardMarkup, KeyboardButton
+  )
 from telegram.ext import CallbackContext
 from telegram.constants import ChatAction
 from bs4 import BeautifulSoup
@@ -30,9 +33,11 @@ async def search_afisha(update: Update, context: CallbackContext):
   
   keyboard = []
   for movie, link in movies_dict.items():
-    keyboard.append([InlineKeyboardButton(movie, callback_data=link)])
+    # keyboard.append([InlineKeyboardButton(movie, callback_data=link)])
+    keyboard.append([KeyboardButton(movie)])
 
-  markup = InlineKeyboardMarkup(keyboard)
+  # markup = InlineKeyboardMarkup(keyboard)
+  markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
 
   message = f'Кино в Кемерове на {date}:\n\n'
 
