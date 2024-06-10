@@ -39,14 +39,18 @@ async def search_afisha(update: Update, context: CallbackContext):
   for movie in movies_dict.keys():
     message += str(period+1) + '. ' + movie + '\n'
     if period % 6 == 0:
-      keyboard.append([InlineKeyboardButton(period+1, callback_data=movies_dict[movie])])
+      keyboard.append([InlineKeyboardButton(
+        period + 1,
+        callback_data = movies_dict[movie] + '$' + date[0]
+        )])
     else:
-      keyboard[period // 6].append(InlineKeyboardButton(period+1, callback_data=movies_dict[movie]))
-    # keyboard.append([KeyboardButton(movie)])
+      keyboard[period // 6].append(InlineKeyboardButton(
+        period + 1,
+        callback_data = movies_dict[movie] + '$' + date[0]
+        ))
     period += 1
 
   markup = InlineKeyboardMarkup(keyboard)
-  # markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
 
   await update.message.reply_text(text=message, reply_markup=markup)
 
@@ -54,9 +58,11 @@ async def search_afisha(update: Update, context: CallbackContext):
 
 async def handle_movie(update: Update, context: CallbackContext):
   query = update.callback_query
-  movie = query.data
+  data = query.data.split('$')
+  movie_id = data[0]
 
-  url = f'https://kemerovo.kinoafisha.info/movies/{movie}/#submenu'
+  url = f'https://kemerovo.kinoafisha.info/movies/{movie_id}' + \
+    f'/?date={''.join(data[1].split('-'))}#submenu'
   
   response = requests.get(url)
   response.raise_for_status()
@@ -64,8 +70,8 @@ async def handle_movie(update: Update, context: CallbackContext):
   soup = BeautifulSoup(response.text, 'html.parser')
 
   cinemas = soup.find_all('div', class_='showtimes_item')
-  for cinema in cinemas:
-    print(cinema.prettify())
+  # for cinema in cinemas:
+    # print(cinema.prettify())
   
   cinemas_dict = dict()
   for cinema in cinemas:
@@ -84,6 +90,27 @@ async def handle_movie(update: Update, context: CallbackContext):
         sessions_dict[time.get_text().strip()] = None
     cinemas_dict[cinema_title] = sessions_dict
   print(cinemas_dict)
+
+  movie_title = soup.find('span', class_='trailer_title').get_text()
+  message = 'Расписание сеансов *' + movie_title.upper() + f'* на {data[1]}:\n\n'
+  for cinema, session in cinemas_dict.items():
+    message += '*' + cinema + '*: '
+    for time, price in session.items():
+      temp = list(session.items())[-1]
+      if price is not None:
+        if len(session) > 1 and (time, price) != temp:
+          message += '`' + time + '` | ' + price + ', '
+        elif len(session) == 1 or len(session) > 1 and (time, price) == temp:
+          message += '`' + time + '` | ' + price + '\n'
+      else:
+        if len(session) > 1 and (time, price) != temp:
+          message += '`' + time + '`, '
+        elif len(session) == 1 or len(session) > 1 and (time, price) == temp:
+          message += '`' + time + '`' + '\n'
+
+  message = message[:-2]
+
+  await query.edit_message_text(text=message, parse_mode='Markdown')
 
   return ConversationHandler.END
 
