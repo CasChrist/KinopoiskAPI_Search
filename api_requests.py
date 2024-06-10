@@ -4,14 +4,15 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.constants import ChatAction
 
-from bot_token import TOKEN, KINOPOISK_TOKEN
+from bot_token import KINOPOISK_TOKEN
 
 async def search_by_name(update: Update, context: CallbackContext):
   await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
   movie_name = ' '.join(context.args)
   if not movie_name:
-    await update.message.reply_text("Пожалуйста, введите название фильма после команды /movie")
-    return 0
+    text = "❌ *Запрос отклонён*: Введите название фильма после команды /movie"
+    await update.message.reply_text(text=text, parse_mode='Markdown')
+    return
 
   url = f"https://api.kinopoisk.dev/v1.4/movie/search?page=1&limit=10&query={movie_name}"
 
@@ -93,9 +94,9 @@ async def search_by_name(update: Update, context: CallbackContext):
         elif key == 'Годы выпуска':
           message += '*' + key + ':* '
           if value[0] == value[1]:
-            message += value[0] + '\n'
+            message += value[0] + '\n\n'
           else:
-            message += value[0] + '–' + value[1] + '\n'
+            message += value[0] + '–' + value[1] + '\n\n'
         elif key == 'Время':
           if int(value) > 59:
             message += '*' + key + ':* ' + value + ' мин. / 0'
