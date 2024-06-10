@@ -108,7 +108,7 @@ async def handle_movie(update: Update, context: CallbackContext):
         elif len(session) == 1 or len(session) > 1 and (time, price) == temp:
           message += '`' + time + '`' + '\n'
 
-  message = message[:-2]
+  message = message[:-1]
 
   await query.edit_message_text(text=message, parse_mode='Markdown')
 
