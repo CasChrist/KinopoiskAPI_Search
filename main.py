@@ -1,5 +1,9 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackContext
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler,
+    CallbackContext, ConversationHandler,
+    CallbackQueryHandler
+)
 from bot_token import TOKEN
 import api_requests
 import html_parses
@@ -14,7 +18,15 @@ if __name__ == '__main__':
 
     start_handler = CommandHandler('start', start)
     sbn_handler = CommandHandler('movie', api_requests.search_by_name)
-    sa_handler = CommandHandler('tickets', html_parses.search_afisha)
+    sa_handler = ConversationHandler(
+        entry_points = [CommandHandler('tickets', html_parses.search_afisha)],
+        states = {
+            html_parses.CHOOSE_MOVIE: [
+                CallbackQueryHandler(html_parses.handle_movie)
+            ]
+        },
+        fallbacks= [CommandHandler('cancel', html_parses.cancel)]
+    )
 
     app.add_handler(start_handler)
     app.add_handler(sbn_handler)

@@ -4,9 +4,11 @@ from telegram import (
   Update, InlineKeyboardMarkup, InlineKeyboardButton,
   ReplyKeyboardMarkup, KeyboardButton
   )
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext, ConversationHandler
 from telegram.constants import ChatAction
 from bs4 import BeautifulSoup
+
+CHOOSE_MOVIE, MOVIE = range(0, 2)
 
 async def search_afisha(update: Update, context: CallbackContext):
 
@@ -48,4 +50,44 @@ async def search_afisha(update: Update, context: CallbackContext):
 
   await update.message.reply_text(text=message, reply_markup=markup)
 
-    
+  return CHOOSE_MOVIE
+
+async def handle_movie(update: Update, context: CallbackContext):
+  query = update.callback_query
+  movie = query.data
+
+  url = f'https://kemerovo.kinoafisha.info/movies/{movie}/#submenu'
+  
+  response = requests.get(url)
+  response.raise_for_status()
+
+  soup = BeautifulSoup(response.text, 'html.parser')
+
+  cinemas = soup.find_all('div', class_='showtimes_item')
+  for cinema in cinemas:
+    print(cinema.prettify())
+  
+  cinemas_dict = dict()
+  for cinema in cinemas:
+    try:
+      cinema_title = cinema.find('span', class_='showtimesCinema_name').get_text().strip()
+    except:
+      continue
+    sessions_dict = dict()
+    session_time = cinema.find_all('span', class_='session_time')
+    session_price = cinema.find_all('span', class_='session_price')
+    for time in session_time:
+      if len(session_price) != 0:
+        for price in session_price:
+          sessions_dict[time.get_text().strip()] = price.get_text().strip()
+      else:
+        sessions_dict[time.get_text().strip()] = None
+    cinemas_dict[cinema_title] = sessions_dict
+  print(cinemas_dict)
+
+  return ConversationHandler.END
+
+async def cancel(update: Update, context: CallbackContext):
+  await update.message.reply_text('Query cancelled.')
+
+  return ConversationHandler.END
