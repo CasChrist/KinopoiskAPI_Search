@@ -18,6 +18,7 @@ months = {
 }
 
 async def search_afisha(update: Update, context: CallbackContext):
+  await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
     
   if len(context.args) == 0:
     date = parser.parse(datetime.today().strftime('%Y-%m-%d')).strftime('%Y-%m-%d')
@@ -80,6 +81,7 @@ async def search_afisha(update: Update, context: CallbackContext):
   return CHOOSE_MOVIE
 
 async def handle_movie(update: Update, context: CallbackContext):
+  await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
   query = update.callback_query
   data = query.data.split('$')
   movie_id = data[0]
