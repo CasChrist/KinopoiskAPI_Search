@@ -7,6 +7,7 @@ from telegram.ext import CallbackContext, ConversationHandler
 from telegram.constants import ChatAction
 from bs4 import BeautifulSoup
 from dateutil import parser
+from datetime import datetime
 
 CHOOSE_MOVIE, MOVIE = range(0, 2)
 
@@ -17,11 +18,14 @@ months = {
 }
 
 async def search_afisha(update: Update, context: CallbackContext):
-
-  parsed_date = parser.parse(context.args[0])
-  formatted_date = parsed_date.strftime('%Y-%m-%d')
+    
+  if len(context.args) == 0:
+    date = parser.parse(datetime.today().strftime('%Y-%m-%d')).strftime('%Y-%m-%d')
+  else:
+    date = parser.parse(context.args[0]).strftime('%Y-%m-%d')  
+    
   # URL веб-страницы с афишей кино
-  url = f'https://kemerovo.kinoafisha.info/movies/?date={formatted_date}'
+  url = f'https://kemerovo.kinoafisha.info/movies/?date={date}'
 
   # Получение содержимого веб-страницы
   response = requests.get(url)
@@ -40,9 +44,9 @@ async def search_afisha(update: Update, context: CallbackContext):
     index = movie_link[35:-1]
     movies_dict[movie_title] = index
   
-  parsed_back_date = parser.parse(formatted_date)
+  parsed_back_date = parser.parse(date)
   formatted_back_date = parsed_back_date.strftime('%d') + \
-    f' {months[formatted_date[5:7]]} ' + parsed_back_date.strftime('%Y') + ' года'
+    f' {months[date[5:7]]} ' + parsed_back_date.strftime('%Y') + ' года'
   message = f'Кино в `Кемерове` на *{formatted_back_date}*:\n\n'
   keyboard = []
   period = 0
@@ -51,12 +55,12 @@ async def search_afisha(update: Update, context: CallbackContext):
     if period % 6 == 0:
       keyboard.append([InlineKeyboardButton(
         period + 1,
-        callback_data = movies_dict[movie] + '$' + formatted_date
+        callback_data = movies_dict[movie] + '$' + date
         )])
     else:
       keyboard[period // 6].append(InlineKeyboardButton(
         period + 1,
-        callback_data = movies_dict[movie] + '$' + formatted_date
+        callback_data = movies_dict[movie] + '$' + date
         ))
     period += 1
 
