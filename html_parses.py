@@ -1,20 +1,27 @@
 import requests
 
 from telegram import (
-  Update, InlineKeyboardMarkup, InlineKeyboardButton,
-  ReplyKeyboardMarkup, KeyboardButton
+  Update, InlineKeyboardMarkup, InlineKeyboardButton
   )
 from telegram.ext import CallbackContext, ConversationHandler
 from telegram.constants import ChatAction
 from bs4 import BeautifulSoup
+from dateutil import parser
 
 CHOOSE_MOVIE, MOVIE = range(0, 2)
 
+months = {
+    "01": "января", "02": "февраля", "03": "марта", "04": "апреля",
+    "05": "мая", "06": "июня", "07": "июля", "08": "августа",
+    "09": "сентября", "10": "октября", "11": "ноября", "12": "декабря"
+}
+
 async def search_afisha(update: Update, context: CallbackContext):
 
-  date = context.args
+  parsed_date = parser.parse(context.args[0])
+  formatted_date = parsed_date.strftime('%Y-%m-%d')
   # URL веб-страницы с афишей кино
-  url = f'https://kemerovo.kinoafisha.info/movies/?date={date[0]}'
+  url = f'https://kemerovo.kinoafisha.info/movies/?date={formatted_date}'
 
   # Получение содержимого веб-страницы
   response = requests.get(url)
@@ -33,7 +40,10 @@ async def search_afisha(update: Update, context: CallbackContext):
     index = movie_link[35:-1]
     movies_dict[movie_title] = index
   
-  message = f'Кино в Кемерове на {date[0]}:\n\n'
+  parsed_back_date = parser.parse(formatted_date)
+  formatted_back_date = parsed_back_date.strftime('%d') + \
+    f' {months[formatted_date[5:7]]} ' + parsed_back_date.strftime('%Y') + ' года'
+  message = f'Кино в `Кемерове` на *{formatted_back_date}*:\n\n'
   keyboard = []
   period = 0
   for movie in movies_dict.keys():
@@ -41,18 +51,18 @@ async def search_afisha(update: Update, context: CallbackContext):
     if period % 6 == 0:
       keyboard.append([InlineKeyboardButton(
         period + 1,
-        callback_data = movies_dict[movie] + '$' + date[0]
+        callback_data = movies_dict[movie] + '$' + formatted_date
         )])
     else:
       keyboard[period // 6].append(InlineKeyboardButton(
         period + 1,
-        callback_data = movies_dict[movie] + '$' + date[0]
+        callback_data = movies_dict[movie] + '$' + formatted_date
         ))
     period += 1
 
   markup = InlineKeyboardMarkup(keyboard)
 
-  await update.message.reply_text(text=message, reply_markup=markup)
+  await update.message.reply_text(text=message, reply_markup=markup, parse_mode='Markdown')
 
   return CHOOSE_MOVIE
 
@@ -70,8 +80,6 @@ async def handle_movie(update: Update, context: CallbackContext):
   soup = BeautifulSoup(response.text, 'html.parser')
 
   cinemas = soup.find_all('div', class_='showtimes_item')
-  # for cinema in cinemas:
-    # print(cinema.prettify())
   
   cinemas_dict = dict()
   for cinema in cinemas:
@@ -92,7 +100,11 @@ async def handle_movie(update: Update, context: CallbackContext):
   print(cinemas_dict)
 
   movie_title = soup.find('span', class_='trailer_title').get_text()
-  message = 'Расписание сеансов *' + movie_title.upper() + f'* на {data[1]}:\n\n'
+  parsed_back_date = parser.parse(data[1])
+  formatted_back_date = parsed_back_date.strftime('%d') + \
+    f' {months[data[1][5:7]]} ' + parsed_back_date.strftime('%Y') + ' года'
+  message = 'Расписание сеансов *' + movie_title.upper() + \
+    f'* на *{formatted_back_date}*:\n\n'
   for cinema, session in cinemas_dict.items():
     message += '*' + cinema + '*: '
     for time, price in session.items():
