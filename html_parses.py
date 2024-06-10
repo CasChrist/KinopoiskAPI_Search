@@ -22,6 +22,10 @@ async def search_afisha(update: Update, context: CallbackContext):
   if len(context.args) == 0:
     date = parser.parse(datetime.today().strftime('%Y-%m-%d')).strftime('%Y-%m-%d')
   else:
+    if parser.parse(context.args[0]) < datetime.today():
+      text = '❌ *Запрос отклонён*: Укажите дату не ранее текущей.'
+      await update.message.reply_text(text=text, parse_mode='Markdown')
+      return ConversationHandler.END
     date = parser.parse(context.args[0]).strftime('%Y-%m-%d')  
     
   # URL веб-страницы с афишей кино
@@ -36,6 +40,11 @@ async def search_afisha(update: Update, context: CallbackContext):
 
   # Найти все элементы, содержащие информацию о фильмах
   movies = soup.find_all('div', class_='movieItem_info')
+  if len(movies) == 0:
+    text = '❌ *Запрос отклонён*: На эту дату ещё нет сеансов.'
+    await update.message.reply_text(text=text, parse_mode='Markdown')
+    return ConversationHandler.END
+
   # Словарь для хранения названий фильмов и ссылок на страницы с сеансами
   movies_dict = dict()
   for movie in movies:
