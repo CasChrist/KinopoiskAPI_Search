@@ -25,6 +25,12 @@ async def search_afisha(update: Update, context: CallbackContext):
   if len(context.args) == 0:
     date = parser.parse(datetime.today().strftime('%Y-%m-%d')).strftime('%Y-%m-%d')
   else:
+    try:
+      parser.parse(context.args[0])
+    except:
+      text = '❌ *Запрос отклонён*: Кажется, вы либо указали не дату, либо в неверном формате.'
+      await update.message.reply_text(text=text, parse_mode='Markdown')
+      log(update.effective_user.id, f'Bot: {text}')
     if parser.parse(context.args[0]) < datetime.today():
       text = '❌ *Запрос отклонён*: Укажите дату не ранее текущей.'
       await update.message.reply_text(text=text, parse_mode='Markdown')
