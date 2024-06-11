@@ -4,14 +4,18 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.constants import ChatAction
 
-from bot_token import TOKEN, KINOPOISK_TOKEN
+from bot_token import KINOPOISK_TOKEN
+from log import log
 
 async def search_by_name(update: Update, context: CallbackContext):
+  log(update.effective_user.id, f'User: {update.message.text}')
   await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
   movie_name = ' '.join(context.args)
   if not movie_name:
-    await update.message.reply_text("Пожалуйста, введите название фильма после команды /movie")
-    return 0
+    text = "❌ *Запрос отклонён*: Введите название фильма после команды /movie"
+    await update.message.reply_text(text=text, parse_mode='Markdown')
+    log(update.effective_user.id, f'Bot: {text}')
+    return
 
   url = f"https://api.kinopoisk.dev/v1.4/movie/search?page=1&limit=10&query={movie_name}"
 
@@ -115,12 +119,15 @@ async def search_by_name(update: Update, context: CallbackContext):
         text=message,
         parse_mode="Markdown",
         disable_web_page_preview=True)
+      log(update.effective_user.id, f'Bot: {message}')
     else:
       await update.message.reply_photo(
         photo=pull_data['poster'],
         caption=message,
         parse_mode="Markdown")
+      log(update.effective_user.id, f'Bot: {message}')
   else:
     await update.message.reply_text("Фильм не найден")
+    log(update.effective_user.id, f'Bot: {message}')
 
   return response.json()
