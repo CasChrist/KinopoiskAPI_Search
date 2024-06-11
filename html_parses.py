@@ -8,6 +8,7 @@ from telegram.constants import ChatAction
 from bs4 import BeautifulSoup
 from dateutil import parser
 from datetime import datetime
+from log import log
 
 CHOOSE_MOVIE, MOVIE = range(0, 2)
 
@@ -19,14 +20,17 @@ months = {
 
 async def search_afisha(update: Update, context: CallbackContext):
   await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
-    
+  log(update.effective_user.id, f'User: {update.message.text}')
+
   if len(context.args) == 0:
     date = parser.parse(datetime.today().strftime('%Y-%m-%d')).strftime('%Y-%m-%d')
   else:
     if parser.parse(context.args[0]) < datetime.today():
       text = '❌ *Запрос отклонён*: Укажите дату не ранее текущей.'
       await update.message.reply_text(text=text, parse_mode='Markdown')
+      log(update.effective_user.id, f'Bot: {text}')
       return ConversationHandler.END
+    
     date = parser.parse(context.args[0]).strftime('%Y-%m-%d')  
     
   # URL веб-страницы с афишей кино
@@ -44,6 +48,7 @@ async def search_afisha(update: Update, context: CallbackContext):
   if len(movies) == 0:
     text = '❌ *Запрос отклонён*: На эту дату ещё нет сеансов.'
     await update.message.reply_text(text=text, parse_mode='Markdown')
+    log(update.effective_user.id, f'Bot: {text}')
     return ConversationHandler.END
 
   # Словарь для хранения названий фильмов и ссылок на страницы с сеансами
@@ -77,6 +82,7 @@ async def search_afisha(update: Update, context: CallbackContext):
   markup = InlineKeyboardMarkup(keyboard)
 
   await update.message.reply_text(text=message, reply_markup=markup, parse_mode='Markdown')
+  log(update.effective_user.id, f'Bot: {message}')
 
   return CHOOSE_MOVIE
 
@@ -138,10 +144,12 @@ async def handle_movie(update: Update, context: CallbackContext):
   message = message[:-1]
 
   await query.edit_message_text(text=message, parse_mode='Markdown')
+  log(update.effective_user.id, f'Bot: {message}')
 
   return ConversationHandler.END
 
 async def cancel(update: Update, context: CallbackContext):
-  await update.message.reply_text('Query cancelled.')
-
+  text = 'Query canceled.'
+  await update.message.reply_text(text=text)
+  log(update.effective_user.id, f'Bot: {text}')
   return ConversationHandler.END
