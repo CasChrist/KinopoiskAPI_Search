@@ -97,9 +97,9 @@ async def search_by_name(update: Update, context: CallbackContext):
         elif key == 'Годы выпуска':
           message += '*' + key + ':* '
           if value[0] == value[1]:
-            message += value[0] + '\n'
+            message += value[0] + '\n\n'
           else:
-            message += value[0] + '–' + value[1] + '\n'
+            message += value[0] + '–' + value[1] + '\n\n'
         elif key == 'Время':
           if int(value) > 59:
             message += '*' + key + ':* ' + value + ' мин. / 0'
